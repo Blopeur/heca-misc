@@ -1,0 +1,127 @@
+===============================================================================
+Hecatonchire Kernel Documentation
+===============================================================================
+
+-------------------------------------------------------------------------------
+Hecatonchire Files or kernel modified files
+
+-------------------------------------------------------------------------------
+
+include/linux
+
+include/linux/swap.h : 
+
+	line 73 :
+		 We reserve here one Swap slot for HECA that will be used to identify all PTE that require HECA related operation  
+
+include/linux/swapops.h : 
+
+	line 200 : 
+		This is were we have the HECA related swap operation defined, ex: swap bit operation, test if swap entry is of HECA type, etc.. 
+
+include/linux/heca.h :
+
+	Contains all the HECA structure used for ioctl vi Char dev as well as IOCTL related info 	
+
+include/linux/heca_hook.h : 
+
+	Define all the hooks function used in the static kernel 
+
+
+
+
+
+mm : 
+
+Memory managment part of linux , basically where we inject HECA hooks to handle page fault and also the push back mechanism 
+
+mm/heca_hook.c
+
+	Contains Heca hooks and all the necessary exports for the Heca module to work with the static kernel for the MMU part
+
+mm/backing-dev.c
+	
+	Line 622 : | wait_iff_congested | 
+		Congestion detection for hecatonchire 
+
+mm/memory.c
+
+	line 3018 : | do_swap_page | 
+		This is where we check if the swap entry is of HECA type , if yes we branch out and handle the fault resolution
+
+
+	line 3749 : | handle_pte_fault | 
+		This is where we detect write fault on read protected HECA page and inject our coherency resolution 
+
+
+
+mm/vmscan.c
+
+	line 877 : | shrink_page_list | 
+		This is where we inject ourself within the shrink page list. We do a quick check to identify if teh page belong to MM where we have a Heca Memory region, if yes you check if this MR belong to a remote Heca process. If yes we try to push back the page. 
+
+ 
+ 
+drivers/heca
+
+	Contain the core Heca functionality , Note we might split the RDMA engine from the Memory aspect of HECA, effectively creating 2 submodule within the Heca folder. 
+
+	Makefile : 
+
+		Heca Kernel module makefile
+
+	Kconfig : 
+	
+		Configure the module ( ex via .config, or make menuconfig) 
+
+	base.c/h : 
+		
+		Some core/ basic operation used throughout the module, ex: search , remove , insert connection, mr, hproc, hspace. Creation of HCM too
+
+	conn.c/h : 
+
+		Anything related to RDMA communication 
+
+	ioctl.c/h : 
+
+		Anything related to Chard dev communication ( with libheca) 
+
+	ops.c/h :
+
+		Contains protocol / communication logic. This layer leverage the RDMA layer to rx/tx msgs 
+
+	pull.c/h : 
+
+		Pulling page from remote node 
+
+	push.c/h : 
+
+		Pushing back page to remote node 
+
+	struct.c/h : 
+
+		All the main structure use throughout Heca
+
+	sysfs.c/h :
+
+		were we expose Heca information via SYFS 
+
+	task.c/h : 
+
+		Experimental , native memory scale out wihtout binary modification 
+
+	trace.h : 
+		
+		Tracing facilities 
+
+
+
+
+
+
+
+
+
+
+
+
